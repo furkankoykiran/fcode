@@ -1,0 +1,46 @@
+# Private Operator Instructions & Local Research
+CLAUDE.local.md
+*.local
+*.local.md
+
+# Secrets & Environment Variables
+.env
+.env.*
+*.pem
+*.key
+*.cert
+
+# Operating System & Editor Artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local Scratch & Task Artifacts
+.gemini/
+scratch/
+*.log
+
+# Build Outputs & Dependency Caches
+dist/
+build/
+out/
+target/
+node_modules/
+__pycache__/
+*.pyc
+
+# Shared Repository Assets & Governance
+!AGENTS.md
+!CLAUDE.md
+!.claude/
+!.claude/rules/
+!docs/
+!assets/
+!scripts/
+
+# Explicit Private Overrides inside .claude/
+.claude/rules/private-research.md

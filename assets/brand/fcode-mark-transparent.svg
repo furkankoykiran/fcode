@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <g id="fcode-canonical-mark">
+    <path id="fcode-mark-bracket" d="M 172 168 L 132 168 L 132 344 L 172 344" fill="none" stroke="#f0f0f2" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="fcode-mark-arrow" d="M 148 238 L 168 256 L 148 274" fill="none" stroke="#f0f0f2" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="fcode-mark-f" d="M 216 384 L 194 384 L 194 172 L 236 128 L 336 128 L 302 168 L 238 168 L 238 214 L 306 214 L 284 254 L 238 254 L 238 348 Z" fill="none" stroke="#f0f0f2" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <line id="fcode-mark-slash" x1="256" y1="364" x2="280" y2="304" stroke="#f0f0f2" stroke-width="14" stroke-linecap="square" />
+    <rect id="fcode-mark-cursor" x="330" y="214" width="46" height="66" fill="#ff3b30" />
+  </g>
+</svg>

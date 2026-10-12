@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#f0f0f2" />
+  <g opacity="0.6">
+    <line x1="76" y1="76" x2="436" y2="76" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <line x1="76" y1="436" x2="436" y2="436" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <line x1="76" y1="76" x2="76" y2="436" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <line x1="436" y1="76" x2="436" y2="436" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <line x1="76" y1="256" x2="436" y2="256" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <line x1="256" y1="76" x2="256" y2="436" stroke="#d0d0d4" stroke-width="1.5" stroke-dasharray="4,4" />
+  </g>
+  <g stroke="#8a8d92" stroke-width="2" stroke-linecap="square">
+    <line x1="256" y1="20" x2="256" y2="38" />
+    <line x1="247" y1="29" x2="265" y2="29" />
+    <line x1="256" y1="474" x2="256" y2="492" />
+    <line x1="247" y1="483" x2="265" y2="483" />
+    <line x1="20" y1="256" x2="38" y2="256" />
+    <line x1="29" y1="247" x2="29" y2="265" />
+    <line x1="474" y1="256" x2="492" y2="256" />
+    <line x1="483" y1="247" x2="483" y2="265" />
+  </g>
+  <g id="fcode-canonical-mark">
+    <path id="fcode-mark-bracket" d="M 172 168 L 132 168 L 132 344 L 172 344" fill="none" stroke="#08080a" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="fcode-mark-arrow" d="M 148 238 L 168 256 L 148 274" fill="none" stroke="#08080a" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="fcode-mark-f" d="M 216 384 L 194 384 L 194 172 L 236 128 L 336 128 L 302 168 L 238 168 L 238 214 L 306 214 L 284 254 L 238 254 L 238 348 Z" fill="none" stroke="#08080a" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" />
+    <line id="fcode-mark-slash" x1="256" y1="364" x2="280" y2="304" stroke="#08080a" stroke-width="14" stroke-linecap="square" />
+    <rect id="fcode-mark-cursor" x="330" y="214" width="46" height="66" fill="#ff3b30" />
+  </g>
+</svg>
