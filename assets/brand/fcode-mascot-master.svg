@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <g id="fcode-mascot-syn">
+    <!-- Horn Crest / Ear Tufts -->
+    <path id="syn-crest" d="M 148 112 L 172 44 L 214 96 L 256 86 L 298 96 L 340 44 L 364 112" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+    <line id="syn-brow-divider" x1="214" y1="96" x2="298" y2="96" stroke="#4a4d52" stroke-width="6" stroke-linecap="square" />
+
+    <!-- Brow Rule -->
+    <line id="syn-brow" x1="168" y1="136" x2="344" y2="136" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" />
+
+    <!-- Left Eye: Terminal Prompt [ > -->
+    <path id="syn-eye-l-socket" d="M 196 168 L 164 168 L 164 248 L 196 248" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="syn-eye-l-arrow" d="M 184 194 L 210 208 L 184 222" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <!-- Right Eye: Active Block Cursor [ █ ] -->
+    <path id="syn-eye-r-socket" d="M 316 168 L 348 168 L 348 248 L 316 248" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+    <rect id="syn-eye-r-cursor" x="286" y="190" width="34" height="44" fill="#ff3b30" />
+
+    <!-- Beak: Command Chevron and Slash -->
+    <path id="syn-beak-chevron" d="M 236 248 L 256 284 L 276 248" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+    <line id="syn-beak-slash" x1="256" y1="284" x2="246" y2="324" stroke="#ff3b30" stroke-width="10" stroke-linecap="square" />
+
+    <!-- Outer Cheek Contours -->
+    <path id="syn-cheek-l" d="M 136 176 L 112 264 L 140 332" fill="none" stroke="#4a4d52" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="syn-cheek-r" d="M 376 176 L 400 264 L 372 332" fill="none" stroke="#4a4d52" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <!-- Bracket Wings -->
+    <path id="syn-wing-l" d="M 140 316 L 100 316 L 100 428 L 152 428" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="syn-wing-r" d="M 372 316 L 412 316 L 412 428 L 360 428" fill="none" stroke="#f0f0f2" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <!-- Chest Armor & Core Synthesis Matrix -->
+    <path id="syn-chest-v" d="M 208 344 L 256 384 L 304 344" fill="none" stroke="#4a4d52" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter" />
+    <line id="syn-chest-center" x1="256" y1="384" x2="256" y2="436" stroke="#4a4d52" stroke-width="8" stroke-linecap="square" />
+    <line id="syn-chest-slash-l" x1="224" y1="404" x2="240" y2="436" stroke="#4a4d52" stroke-width="6" stroke-linecap="square" />
+    <line id="syn-chest-slash-r" x1="288" y1="404" x2="272" y2="436" stroke="#4a4d52" stroke-width="6" stroke-linecap="square" />
+
+    <!-- Talons / Perch Contacts -->
+    <path id="syn-talon-l" d="M 180 448 L 196 460 L 212 448" fill="none" stroke="#f0f0f2" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter" />
+    <path id="syn-talon-r" d="M 300 448 L 316 460 L 332 448" fill="none" stroke="#f0f0f2" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <!-- Terminal Baseline Rule -->
+    <line id="syn-baseline" x1="64" y1="472" x2="448" y2="472" stroke="#4a4d52" stroke-width="6" stroke-dasharray="12,8" stroke-linecap="square" />
+  </g>
+</svg>
