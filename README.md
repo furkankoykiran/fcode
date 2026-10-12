@@ -132,6 +132,7 @@ This repository is currently at **Phase 0 (Foundation)**:
 
 * **Architecture thesis and decisions:** Documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/DECISIONS_AND_NON_GOALS.md`](docs/DECISIONS_AND_NON_GOALS.md).
 * **Agent governance rules:** Canonical instructions in [`AGENTS.md`](AGENTS.md) and path-scoped rules in [`.claude/rules/`](.claude/rules/).
+* **Security policy:** Vulnerability reporting procedures documented in [`SECURITY.md`](SECURITY.md).
 * **Visual identity and brand assets:** Documented in [`DESIGN.md`](DESIGN.md) with canonical vectors and production assets in [`assets/brand/`](assets/brand/).
 * **Tooling and verification:** Automated generation and verification suites in [`scripts/`](scripts/).
 
