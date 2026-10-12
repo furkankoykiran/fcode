@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (c) 2026 Furkan Köykıran
 """
 scripts/generate_brand.py
 
@@ -6,18 +8,20 @@ Canonical Brand Asset Generator for fcode.
 All assets are deterministically derived from:
 1. Canonical mark vector geometry (bracket, arrow, angular f, slash, crimson cursor)
 2. Canonical mascot vector geometry (syn: the synthesis sentinel owl)
-3. Frozen TrueType vector outlines for wordmark letters (f, c, o, d, e)
+3. Canonical frozen vector path outlines for wordmark (f, c, o, d, e)
+
+Self-contained:
+- Zero runtime font dependencies (does not require /usr/share/fonts or external files).
+- Zero non-uniform scaling distortions.
 
 Transparency Contract:
 - Reusable mark, wordmark, and mascot SVG/PNG exports have genuinely transparent canvases (no background rect, alpha=0 corners).
 - *-on-dark / *-on-light, social previews, and intentionally backgrounded platform assets are opaque.
 - Favicons preserve transparency around glyphs.
-- Zero runtime font dependencies. Zero non-uniform distortions.
 """
 
 import os
 import shutil
-import struct
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
@@ -62,143 +66,74 @@ SYN_TALON_L = "M 180 448 L 196 460 L 212 448"
 SYN_TALON_R = "M 300 448 L 316 460 L 332 448"
 SYN_BASELINE = (64, 472, 448, 472)
 
-
-def extract_wordmark_vector_paths(target_height=76.0, start_x=340.0, baseline_y=228.0):
-    """
-    Extract frozen vector outlines for letters 'f', 'c', 'o', 'd', 'e'
-    directly from system TrueType font without external dependencies.
-    """
-    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
-    with open(font_path, "rb") as f:
-        data = f.read()
-
-    num_tables = struct.unpack(">H", data[4:6])[0]
-    tables = {
-        data[12 + i * 16 : 16 + i * 16].decode("latin1"): struct.unpack(
-            ">I", data[20 + i * 16 : 24 + i * 16]
-        )[0]
-        for i in range(num_tables)
-    }
-    head_off = tables["head"]
-    index_to_loc_format = struct.unpack(
-        ">h", data[head_off + 50 : head_off + 52]
-    )[0]
-    loca_off = tables["loca"]
-    glyf_off = tables["glyf"]
-
-    def get_glyph_offset(gid):
-        if index_to_loc_format == 0:
-            off1 = struct.unpack(">H", data[loca_off + gid * 2 : loca_off + (gid + 1) * 2])[0] * 2
-            off2 = struct.unpack(">H", data[loca_off + (gid + 1) * 2 : loca_off + (gid + 2) * 2])[0] * 2
-        else:
-            off1 = struct.unpack(">I", data[loca_off + gid * 4 : loca_off + (gid + 1) * 4])[0]
-            off2 = struct.unpack(">I", data[loca_off + (gid + 1) * 4 : loca_off + (gid + 2) * 4])[0]
-        return glyf_off + off1, off2 - off1
-
-    def parse_glyph(gid, x_offset):
-        off, length = get_glyph_offset(gid)
-        if length == 0:
-            return ""
-        num_contours = struct.unpack(">h", data[off : off + 2])[0]
-        if num_contours <= 0:
-            return ""
-        end_pts = [
-            struct.unpack(">H", data[off + 10 + i * 2 : off + 12 + i * 2])[0]
-            for i in range(num_contours)
-        ]
-        ins_len = struct.unpack(
-            ">H", data[off + 10 + num_contours * 2 : off + 12 + num_contours * 2]
-        )[0]
-        p = off + 12 + num_contours * 2 + ins_len
-        num_points = end_pts[-1] + 1
-        flags = []
-        while len(flags) < num_points:
-            flag = data[p]
-            p += 1
-            flags.append(flag)
-            if flag & 8:
-                repeat = data[p]
-                p += 1
-                flags.extend([flag] * repeat)
-        x_coords = []
-        cur_x = 0
-        for flag in flags:
-            if flag & 2:
-                val = data[p]
-                p += 1
-                cur_x += val if (flag & 16) else -val
-            elif not (flag & 16):
-                cur_x += struct.unpack(">h", data[p : p + 2])[0]
-                p += 2
-            x_coords.append(cur_x)
-        y_coords = []
-        cur_y = 0
-        for flag in flags:
-            if flag & 4:
-                val = data[p]
-                p += 1
-                cur_y += val if (flag & 32) else -val
-            elif not (flag & 32):
-                cur_y += struct.unpack(">h", data[p : p + 2])[0]
-                p += 2
-            y_coords.append(cur_y)
-
-        scale = target_height / 1556.0
-        path_d = []
-        pt_idx = 0
-        for end_pt in end_pts:
-            pts = []
-            while pt_idx <= end_pt:
-                sx = round(x_offset + x_coords[pt_idx] * scale, 2)
-                sy = round(baseline_y - y_coords[pt_idx] * scale, 2)
-                pts.append((sx, sy, bool(flags[pt_idx] & 1)))
-                pt_idx += 1
-            if not pts:
-                continue
-            n = len(pts)
-            start_i = 0
-            if not pts[0][2]:
-                if pts[-1][2]:
-                    start_i = n - 1
-                else:
-                    mid_x = round((pts[0][0] + pts[-1][0]) / 2, 2)
-                    mid_y = round((pts[0][1] + pts[-1][1]) / 2, 2)
-                    pts = [(mid_x, mid_y, True)] + pts
-                    n = len(pts)
-            pts = pts[start_i:] + pts[:start_i]
-            path_d.append(f"M {pts[0][0]} {pts[0][1]}")
-            i = 1
-            while i < n:
-                curr = pts[i]
-                if curr[2]:
-                    path_d.append(f"L {curr[0]} {curr[1]}")
-                    i += 1
-                else:
-                    nxt = pts[(i + 1) % n]
-                    if nxt[2]:
-                        path_d.append(f"Q {curr[0]} {curr[1]} {nxt[0]} {nxt[1]}")
-                        i += 2
-                    else:
-                        mid_x = round((curr[0] + nxt[0]) / 2, 2)
-                        mid_y = round((curr[1] + nxt[1]) / 2, 2)
-                        path_d.append(f"Q {curr[0]} {curr[1]} {mid_x} {mid_y}")
-                        i += 1
-            path_d.append("Z")
-        return " ".join(path_d)
-
-    gids = [("f", 73), ("c", 70), ("o", 82), ("d", 71), ("e", 72)]
-    adv = 1233.0 * (target_height / 1556.0)
-    paths = [
-        parse_glyph(gid, round(start_x + i * adv, 2))
-        for i, (ch, gid) in enumerate(gids)
-    ]
-    cursor_x = round(start_x + len(gids) * adv + 10, 1)
-    return " ".join(paths), cursor_x, adv
-
-
-WORDMARK_PATH_800X400, WORDMARK_CURSOR_X_800X400, _ = extract_wordmark_vector_paths(
-    target_height=76.0, start_x=340.0, baseline_y=228.0
+# Canonical Wordmark Frozen Vector Paths (Self-contained, zero external font dependency)
+WORDMARK_PATH_800X400 = (
+    "M 376.1 168.51 L 376.1 173.3 L 392.9 173.3 L 392.9 184.29 L 376.1 184.29 L 376.1 228.0 "
+    "L 361.78 228.0 L 361.78 184.29 L 348.5 184.29 L 348.5 173.3 L 361.78 173.3 L 361.78 169.49 "
+    "Q 361.78 159.62 365.88 155.81 Q 369.99 152.0 381.13 152.0 L 392.9 152.0 L 392.9 162.99 "
+    "L 381.71 162.99 Q 378.49 162.99 377.34 164.16 Q 376.19 165.33 376.1 168.51 Z "
+    "M 452.04 225.22 Q 448.43 227.32 444.27 228.37 Q 440.12 229.42 435.34 229.42 "
+    "Q 422.69 229.42 415.56 221.8 Q 408.43 214.18 408.43 200.7 Q 408.43 187.17 415.61 179.52 "
+    "Q 422.79 171.88 435.44 171.88 Q 439.83 171.88 443.91 172.91 Q 447.99 173.93 452.04 176.08 "
+    "L 452.04 189.17 Q 448.92 186.48 445.18 185.04 Q 441.44 183.6 437.44 183.6 "
+    "Q 430.45 183.6 426.69 188.05 Q 422.93 192.49 422.93 200.7 Q 422.93 208.9 426.69 213.3 "
+    "Q 430.45 217.69 437.44 217.69 Q 441.59 217.69 445.2 216.3 Q 448.82 214.91 452.04 212.08 Z "
+    "M 490.54 183.6 Q 485.41 183.6 482.48 188.12 Q 479.55 192.64 479.55 200.7 "
+    "Q 479.55 208.76 482.48 213.27 Q 485.41 217.79 490.54 217.79 Q 495.71 217.79 498.64 213.27 "
+    "Q 501.58 208.76 501.58 200.7 Q 501.58 192.64 498.64 188.12 Q 495.71 183.6 490.54 183.6 Z "
+    "M 465.24 200.7 Q 465.24 187.46 472.1 179.72 Q 478.96 171.98 490.54 171.98 "
+    "Q 502.16 171.98 509.02 179.72 Q 515.89 187.46 515.89 200.7 Q 515.89 213.93 509.02 221.68 "
+    "Q 502.16 229.42 490.54 229.42 Q 478.96 229.42 472.1 221.68 Q 465.24 213.93 465.24 200.7 Z "
+    "M 559.3 181.06 L 559.3 152.0 L 573.57 152.0 L 573.57 228.0 L 559.3 228.0 L 559.3 219.89 "
+    "Q 557.01 224.63 553.37 227.02 Q 549.73 229.42 544.8 229.42 Q 535.42 229.42 530.25 221.89 "
+    "Q 525.07 214.37 525.07 200.7 Q 525.07 186.83 530.32 179.41 Q 535.57 171.98 545.29 171.98 "
+    "Q 549.68 171.98 553.17 174.25 Q 556.67 176.52 559.3 181.06 Z "
+    "M 539.38 200.79 Q 539.38 208.71 542.01 213.2 Q 544.65 217.69 549.29 217.69 "
+    "Q 553.93 217.69 556.62 213.2 Q 559.3 208.71 559.3 200.79 Q 559.3 192.88 556.62 188.38 "
+    "Q 553.93 183.89 549.29 183.89 Q 544.65 183.89 542.01 188.38 Q 539.38 192.88 539.38 200.79 Z "
+    "M 634.72 225.31 Q 629.73 227.37 624.56 228.39 Q 619.38 229.42 613.61 229.42 "
+    "Q 599.89 229.42 592.63 222.06 Q 585.38 214.71 585.38 200.89 Q 585.38 187.51 592.37 179.75 "
+    "Q 599.35 171.98 611.42 171.98 Q 623.58 171.98 630.3 179.19 Q 637.01 186.39 637.01 199.48 "
+    "L 637.01 205.29 L 599.94 205.29 Q 599.99 211.74 603.75 214.91 Q 607.51 218.08 614.98 218.08 "
+    "Q 619.92 218.08 624.7 216.67 Q 629.49 215.25 634.72 212.17 Z "
+    "M 622.6 194.54 Q 622.5 188.88 619.69 185.97 Q 616.89 183.06 611.42 183.06 "
+    "Q 606.48 183.06 603.55 186.06 Q 600.62 189.07 600.09 194.59 Z"
 )
+WORDMARK_CURSOR_X_800X400 = 651.1
+
+WORDMARK_PATH_1280X640 = (
+    "M 577.49 281.72 L 577.49 288.02 L 599.6 288.02 L 599.6 302.48 L 577.49 302.48 L 577.49 360.0 "
+    "L 558.66 360.0 L 558.66 302.48 L 541.18 302.48 L 541.18 288.02 L 558.66 288.02 L 558.66 283.01 "
+    "Q 558.66 270.03 564.06 265.01 Q 569.46 260.0 584.11 260.0 L 599.6 260.0 L 599.6 274.46 "
+    "L 584.88 274.46 Q 580.64 274.46 579.13 276.0 Q 577.62 277.54 577.49 281.72 Z "
+    "M 677.43 356.34 Q 672.67 359.1 667.21 360.48 Q 661.75 361.86 655.45 361.86 "
+    "Q 638.8 361.86 629.42 351.84 Q 620.04 341.81 620.04 324.07 Q 620.04 306.27 629.48 296.22 "
+    "Q 638.93 286.16 655.58 286.16 Q 661.36 286.16 666.73 287.51 Q 672.09 288.86 677.43 291.68 "
+    "L 677.43 308.91 Q 673.31 305.37 668.39 303.48 Q 663.48 301.58 658.21 301.58 "
+    "Q 649.02 301.58 644.07 307.43 Q 639.12 313.28 639.12 324.07 Q 639.12 334.87 644.07 340.65 "
+    "Q 649.02 346.44 658.21 346.44 Q 663.67 346.44 668.43 344.61 Q 673.19 342.78 677.43 339.05 Z "
+    "M 728.07 301.58 Q 721.32 301.58 717.47 307.52 Q 713.61 313.47 713.61 324.07 "
+    "Q 713.61 334.68 717.47 340.62 Q 721.32 346.57 728.07 346.57 Q 734.88 346.57 738.74 340.62 "
+    "Q 742.59 334.68 742.59 324.07 Q 742.59 313.47 738.74 307.52 Q 734.88 301.58 728.07 301.58 Z "
+    "M 694.78 324.07 Q 694.78 306.66 703.81 296.48 Q 712.84 286.29 728.07 286.29 "
+    "Q 743.36 286.29 752.39 296.48 Q 761.42 306.66 761.42 324.07 Q 761.42 341.49 752.39 351.68 "
+    "Q 743.36 361.86 728.07 361.86 Q 712.84 361.86 703.81 351.68 Q 694.78 341.49 694.78 324.07 Z "
+    "M 818.56 298.24 L 818.56 260.0 L 837.32 260.0 L 837.32 360.0 L 818.56 360.0 L 818.56 349.33 "
+    "Q 815.53 355.57 810.75 358.72 Q 805.96 361.86 799.47 361.86 Q 787.13 361.86 780.32 351.97 "
+    "Q 773.5 342.07 773.5 324.07 Q 773.5 305.82 780.41 296.06 Q 787.32 286.29 800.11 286.29 "
+    "Q 805.89 286.29 810.49 289.27 Q 815.09 292.26 818.56 298.24 Z "
+    "M 792.33 324.2 Q 792.33 334.61 795.81 340.52 Q 799.28 346.44 805.38 346.44 "
+    "Q 811.49 346.44 815.02 340.52 Q 818.56 334.61 818.56 324.2 Q 818.56 313.79 815.02 307.88 "
+    "Q 811.49 301.97 805.38 301.97 Q 799.28 301.97 795.81 307.88 Q 792.33 313.79 792.33 324.2 Z "
+    "M 917.79 356.47 Q 911.24 359.16 904.42 360.51 Q 897.61 361.86 890.03 361.86 "
+    "Q 871.97 361.86 862.42 352.19 Q 852.88 342.52 852.88 324.33 Q 852.88 306.72 862.07 296.5 "
+    "Q 871.26 286.29 887.14 286.29 Q 903.14 286.29 911.97 295.76 Q 920.81 305.24 920.81 322.47 "
+    "L 920.81 330.12 L 872.03 330.12 Q 872.1 338.6 877.05 342.77 Q 882.0 346.95 891.83 346.95 "
+    "Q 898.32 346.95 904.62 345.09 Q 910.92 343.23 917.79 339.18 Z "
+    "M 901.85 315.98 Q 901.73 308.52 898.04 304.69 Q 894.34 300.87 887.14 300.87 "
+    "Q 880.65 300.87 876.79 304.82 Q 872.93 308.78 872.23 316.04 Z"
+)
+WORDMARK_CURSOR_X_1280X640 = 936.2
 
 
 def get_canonical_mark_svg_group(stroke_color=BONE_WHITE, cursor_color=SIGNAL_CRIMSON):
@@ -392,9 +327,6 @@ def build_wordmark_svg(mode="transparent", animated=False):
 
 def build_social_preview_svg():
     """Generates 1280x640 GitHub social preview SVG."""
-    paths_1280, cursor_x_1280, _ = extract_wordmark_vector_paths(
-        target_height=100.0, start_x=530.0, baseline_y=360.0
-    )
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
   <rect width="1280" height="640" fill="{VOID_BLACK}" />
   <g stroke="#181a20" stroke-width="1.5">
@@ -436,8 +368,8 @@ def build_social_preview_svg():
   <g transform="translate(360, 320) scale(0.9) translate(-256, -256)">
     {get_canonical_mark_svg_group(stroke_color=BONE_WHITE)}
   </g>
-  <path d="{paths_1280}" fill="{BONE_WHITE}" />
-  <rect x="{cursor_x_1280}" y="264.0" width="34" height="96.0" fill="{SIGNAL_CRIMSON}" />
+  <path d="{WORDMARK_PATH_1280X640}" fill="{BONE_WHITE}" />
+  <rect x="{WORDMARK_CURSOR_X_1280X640}" y="264.0" width="34" height="96.0" fill="{SIGNAL_CRIMSON}" />
 </svg>"""
 
 
@@ -485,14 +417,14 @@ def build_mascot_avatar_svg():
 
 
 def render_png(src_svg, dst_png, bg="none", resize=None):
-    """Renders PNG using ImageMagick PNG32 for strict 8-bit RGBA channels."""
+    """Renders PNG using ImageMagick PNG32 with -strip for strict 8-bit RGBA channels and determinism."""
     cmd = ["convert"]
     if bg:
         cmd.extend(["-background", bg])
     cmd.append(src_svg)
     if resize:
         cmd.extend(["-resize", resize])
-    cmd.append(f"PNG32:{dst_png}")
+    cmd.extend(["-strip", f"PNG32:{dst_png}"])
     subprocess.run(cmd, check=True)
 
 
@@ -585,7 +517,7 @@ def main():
         f.write(build_wordmark_svg(mode="on-dark", animated=True))
 
     # ==================== 5. RASTER RENDERING (PNG & JPG) ====================
-    print("Rendering raster assets with ImageMagick PNG32...")
+    print("Rendering raster assets with ImageMagick PNG32 and -strip...")
 
     # Transparent Mark PNGs
     render_png(mark_trans_path, os.path.join(BRAND_DIR, "fcode-mark-transparent.png"), bg="none")
@@ -637,7 +569,7 @@ def main():
     # Social Preview (1280x640)
     render_png(social_svg_path, os.path.join(BRAND_DIR, "fcode-social-preview-1280x640.png"), bg=VOID_BLACK)
     subprocess.run(
-        ["convert", social_svg_path, "-quality", "95", os.path.join(BRAND_DIR, "fcode-social-preview-1280x640.jpg")],
+        ["convert", social_svg_path, "-strip", "-quality", "95", os.path.join(BRAND_DIR, "fcode-social-preview-1280x640.jpg")],
         check=True,
     )
 
@@ -661,7 +593,7 @@ def main():
         render_png(tmp_ic.name, p16, bg="none", resize="16x16")
         # Multi-size favicon.ico
         subprocess.run(
-            ["convert", p16, p32, "-colors", "256", os.path.join(BRAND_DIR, "favicon.ico")],
+            ["convert", p16, p32, "-strip", "-colors", "256", os.path.join(BRAND_DIR, "favicon.ico")],
             check=True,
         )
 
@@ -678,7 +610,7 @@ def main():
             subprocess.run(["convert", t1.name, p1.name], check=True)
             subprocess.run(["convert", t2.name, p2.name], check=True)
             subprocess.run(
-                ["convert", "-delay", "50", "-loop", "0", p1.name, p2.name, os.path.join(BRAND_DIR, "fcode-motion-pulse.gif")],
+                ["convert", "-delay", "50", "-loop", "0", p1.name, p2.name, "-strip", os.path.join(BRAND_DIR, "fcode-motion-pulse.gif")],
                 check=True,
             )
 

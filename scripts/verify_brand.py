@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (c) 2026 Furkan Köykıran
 """
 scripts/verify_brand.py
 
@@ -24,6 +26,8 @@ import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+
+sys.dont_write_bytecode = True
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRAND_DIR = os.path.join(BASE_DIR, "assets", "brand")
